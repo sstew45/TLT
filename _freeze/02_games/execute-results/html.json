@@ -1,0 +1,17 @@
+{
+  "hash": "1729649ebc049cf58301afb62ac96411",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\nauthor: Scott Stewart\ndate-modified: last-modified\n---\n\n\n# Games\n\nHere is a `code font` and here is some math:\n\n$$\n\\mathrm{REB\\_PCT}=\\frac{\\mathrm{REB} \\times \\frac{32}{\\mathrm{MIN}}}{\\mathrm{TLT\\_REB}+\\mathrm{OPP\\_REB}}\n$$\nTo learn more about Quarto websites visit <https://quarto.org/docs/websites>.\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1 + 1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 2\n```\n\n\n:::\n\n```{.r .cell-code}\nlibrary(ggplot2)\n\ny <- (3 / 5) |> \n  round(digits = 3)\n```\n:::\n",
+    "supporting": [
+      "02_games_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

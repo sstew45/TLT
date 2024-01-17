@@ -1,0 +1,16 @@
+/*-- scss:rules --*/
+  
+#title-block-header.quarto-title-block.default .quarto-title .title {
+  font-size: $font-size-base * 2;
+}
+
+
+.navbar-dark .navbar-brand {
+  font-size: $font-size-base * 2.5;
+  font-weight: bold;
+}
+
+.navbar {
+  font-size: $font-size-base * 1.1;
+  font-weight: bold;
+}

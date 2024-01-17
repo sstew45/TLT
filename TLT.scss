@@ -1,0 +1,57 @@
+/*-- scss:defaults --*/
+
+// use materia as the base
+$theme: "materia" !default;
+
+// import google fonts
+@import url('https://fonts.googleapis.com/css2?family=Outfit');
+@import url('https://fonts.googleapis.com/css2?family=Sniglet');
+@import url('https://fonts.googleapis.com/css2?family=Archivo');
+@import url('https://fonts.googleapis.com/css2?family=Chivo');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Mono');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code');
+
+// use Outfit font if available
+$font-family-sans-serif:  "Outfit", "Chivo", -apple-system, BlinkMacSystemFont, 
+"Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, 
+"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"
+!default;
+
+// default mono font as "Fira Code"
+$font-family-monospace: 'Fira Code' !default;
+
+/* Inline Code Formatting */
+
+// Set a default body emphasis color
+$code-bg: #FFFFFFFF !default;
+
+
+/*-- scss:rules --*/
+
+// default font as san-serif
+p {
+  font-family: $font-family-sans-serif;
+}
+
+// title block
+#title-block-header.quarto-title-block.default .quarto-title .title {
+  font-family: "Fira Code";
+  font-size: $font-size-base * 1;
+  font-weight: 800;
+}
+
+// Navs
+.navbar-brand {
+  font-family: "Outfit", monospace;
+  font-size: 1.3rem;
+  font-weight: 1000;
+}
+// Navbar
+.navbar {
+  font-family: "Sniglet";
+  font-size: $font-size-base * 0.9;
+  font-weight: 500;
+}
+
+$navbar-dark-hover-color:           "#ff6700" !default;
+$navbar-light-hover-color:          "#ff6700" !default;

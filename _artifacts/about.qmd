@@ -1,0 +1,56 @@
+---
+title: "Scott Stewart"
+about:
+  template: marquee
+  links:
+    - icon: mastodon
+      text: Fosstodon
+      href: https://fosstodon.org/@sstew_ods
+    - icon: linkedin
+      text: LinkedIn
+      href: https://linkedin.com/in/scott-a-stewart5813/
+    - icon: github
+      text: Github
+      href: https://github.com/sstew45
+title-block-banner: false
+---
+
+![](profile_pic.jpg){fig-align="left" width="30%"}
+
+## Education
+
+-   B.S. in Mathematics from Northwestern Oklahoma State University (1999)
+-   M.S. in Statistics from Oklahoma State University (2002)
+
+------------------------------------------------------------------------
+
+## Background
+
+I have been learning, using and teaching about statistics for more than two decades, and I thoroughly enjoy my current role as a Biostatistician at the University of Arkansas for Medical Sciences (UAMS) in Little Rock, Arkansas. My areas of interest include:
+
+-   advancing my software skills:
+    -   R for data manipulation and analysis
+    -   Quarto for communications and reproducible research
+    -   Git for version control
+-   analysis of text data
+-   analysis of geospatial data
+-   data visualization
+-   statistics and data science education
+
+![](pic_with_wife_compressed.png){fig-align="left" width="50%"}
+
+My wife and I enjoy time with family (we have five children and a dog), outdoor activities, cooking, and cheering for our favorite sports teams.
+
+------------------------------------------------------------------------
+
+## Data Drives Discovery Blog
+
+With this blog, my primary hope is to better organize my ideas and workflow. If others benefit from the content, then I would regard this as a wildly successful endeavor.
+
+Most of the content at this site will be focused on R, Quarto, and specific data-related problems that interest me. My latest obsessions are related to geospatial and text data analysis, so content related to these topics will initially be geared towards beginners like myself.
+
+------------------------------------------------------------------------
+
+## Contact
+
+In addition to LinkedIn, GitHub, and Fosstodon, you can also contact me by email at: `sstew_ods@protonmail.com`.

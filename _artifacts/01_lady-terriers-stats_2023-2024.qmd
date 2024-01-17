@@ -1,0 +1,694 @@
+---
+title: "Thomas Lady Terriers Team and Player Statistics"
+subtitle: "2023-2024 Season"
+author: Scott Stewart
+date-modified: last-modified
+
+format:
+  bookup-html:
+    embed-resources: true
+    code-fold: true
+    code-copy: hover
+    code-summary: CODE
+    code-tools: 
+      source: true
+    code-link: true
+    toc: true
+    toc-title: Contents
+    toc-depth: 4
+    number-sections: true
+    number-depth: 4
+    fig-width: 8
+    fig-asp: 0.618
+    fig-align: center
+    out-width: "80%"
+    fig-cap-location: bottom
+    tbl-cap-location: top
+
+execute:
+  cache: false
+  echo: true
+  warning: false
+  message: false
+  
+link-citations: true
+
+editor: source
+---
+
+# Setup
+
+First, we need to set up our environment. The code we will be using for loading packages and setting up default plot and table formats can be expanded below.
+
+::: {.callout-note collapse="true"}
+
+## Load Packages and Themes
+
+Packages:
+
+```{r}
+#| label: setup
+
+# load primary packages
+library(here)
+library(showtext)
+library(readxl)
+library(labelled)
+library(janitor)
+library(scales)
+library(patchwork)
+library(ggeasy)
+library(gt)
+library(tinytable)
+library(gtExtras)
+library(dlookr)
+library(psych)
+library(tidyverse)
+
+# knitr options
+# knitr::opts_chunk$set(out.width = 700, out.height = 500)
+```
+
+Plot and table themes:
+
+```{r}
+#| cache: false
+
+# {ggplot2} theme (change font: family/size; change text alignment/spacing)
+font_add_google("Roboto Condensed", "Roboto Condensed")
+showtext_auto()
+
+theme_1 <- function() {
+  font_title <- "Roboto Condensed"           # assign font families up front
+  font_axis_title <- "Roboto Condensed"
+  font_axis <- "Roboto Condensed"
+    
+  theme_classic() %+replace%    # replace elements we want to change
+    
+  theme(
+    
+    # text elements
+    text = element_text(family = font_title),
+    plot.title = element_text(
+      family = font_title,                    
+      size = 20,                              
+      face = "bold",                          
+      hjust = 0,                              # left align
+      vjust = 2,                              # raise slightly
+      lineheight = 0.2),                      # add space between title lines 
+    plot.subtitle = element_text(           
+      family = font_title,                    
+      size = 14,                              
+      hjust = 0),                             # left align
+    plot.caption = element_text(              
+      family = font_axis,                     
+      size = 9,                             
+      hjust = 1),                             # right align
+    axis.title = element_text(   
+      family = font_axis_title, 
+      size = 11),
+    axis.text =  element_text(
+      family = font_axis,
+      size = 9),
+    axis.text.x = element_text(
+      margin = margin(5, b = 10)),            # redefine x axis text spacing
+    legend.title = element_text(
+      family = font_title,
+      size = 12),
+    legend.text = element_text(
+      family = font_title,
+      size = 10)
+  )
+}
+
+theme_set(theme_1())
+
+# {gt} table theme
+basic_gt_theme <- function(data, ...){
+  data |> 
+    tab_style(
+      cell_text(weight = "bold"),
+      locations = cells_column_labels()) |> 
+    tab_options(
+      table.align = "left",
+      table.font.size = pct(90),
+      heading.title.font.size = pct(150),
+      heading.subtitle.font.size = pct(120),
+      column_labels.background.color = "lightgrey",
+      heading.align = "left")
+}
+```
+
+:::
+
+# Introduction
+
+I enjoy following the Thomas Lady Terriers basketball team, and I am forever grateful to [Wright Media](https://wright.media/) and Newstalk KCLI for broadcasting Terrier and Lady Terrier sports on [Terrier TV](https://kclifm.com/kcli-fm-terrier-tv), allowing me to watch the games while living out of state.
+
+I have recorded and maintained player and team statistics for each game of the current season, but now I want to be able to automate some of the aggregations and maybe create some customized plots and tables from these stats. Enter R.
+
+## Load Game Data
+
+### Raw Data
+
+Let's load the data using the **readxl** package:
+
+```{r}
+# file path
+path <- here("Lady-Terriers_STATS_updated-15JAN2024.xlsx")
+
+# sheet names
+sheets <- excel_sheets(path = path)
+
+# choose all but first two sheets and reverse their order
+games <- rev(sheets[-c(1, 2)]) |> 
+  map_df(
+    ~ read_excel(
+      path = path, 
+      sheet = .x, 
+      range = "A4:V25",
+      col_types = "text"),
+    .id = "game")
+```
+
+### Scores by Quarter
+
+```{r}
+# setup
+scores_by_qtr <- games |> 
+  filter(is.na(FTA)) |> 
+  drop_na("Name") |> 
+  filter(Name != "SCORE BY QUARTER") |> 
+  mutate(
+    team = str_to_title(Name),
+    game = as.numeric(game)) |> 
+  select(
+    game, team, 
+    Q1_pts = "Fouls",
+    Q2_pts = "2PA",
+    Q3_pts = "2PM",
+    Q4_pts = "PCT...6") |> 
+  mutate(
+    across(c(Q1_pts:Q4_pts), as.numeric))
+
+# one row per quarter per team
+scores_qtr_long <- scores_by_qtr |> 
+  pivot_longer(
+    cols = -c(1,2),
+    names_to = "qtr",
+    values_to = "points") |> 
+  mutate(quarter = str_sub(qtr, start = 2, end = 2) |> as.numeric()) |> 
+  select(1, 2, 5, 4)
+
+# one row per game per team
+scores_qtr_wide <- scores_by_qtr |> 
+  select(
+    game, team,
+    q1 = Q1_pts,
+    q2 = Q2_pts,
+    q3 = Q3_pts,
+    q4 = Q4_pts) |> 
+  mutate(
+    h1 = q1 + q2,
+    h2 = q3 + q4,
+    g = h1 + h2) |> 
+  set_variable_labels(
+    game = "Game Number",
+    team = "Team Name",
+    q1 = "1st Quarter Points",
+    q2 = "2nd Quarter Points",
+    q3 = "3rd Quarter Points",
+    q4 = "4th Quarter Points",
+    h1 = "1st Half Points",
+    h2 = "2nd Half Points",
+    g = "Total Points")
+
+qtr_wide_col_labs <- scores_qtr_wide
+names(qtr_wide_col_labs) <- as.character(var_label(qtr_wide_col_labs))
+tinytable::tt(qtr_wide_col_labs, theme = "striped")
+# scores_qtr_wide |> gt()
+```
+
+### Opponent Game Stats
+
+```{r}
+opponent_stats <- games |> 
+  drop_na(Name) |> 
+  filter(Name != "THOMAS") |> 
+  slice_tail(n = 3, by = game) |> 
+  slice_head(n = 1, by = game) |> 
+  select(-c(2, 7, 10, 13, 16, 21, 22, 23)) |> 
+  mutate(
+    game = as.numeric(game),
+    # opponent = if_else(Name == "BFDC", "Burns Flat-Dill City", Name),
+    opponent = str_to_title(Name),
+    across(3:15, as.numeric), 
+    .after = Name) |> 
+  mutate(PF = Fouls, .after = TO) |> 
+  select(-c(Name, Fouls)) |> 
+  relocate(opponent, .after = game)
+```
+
+### Player Game Stats
+
+```{r}
+player_stats <- games |> 
+  drop_na(`#`) |>
+  rename(
+    number = `#`,
+    name = Name,
+    PF = Fouls) |> 
+  mutate(
+    number = as.numeric(number),
+    game = as.numeric(game),
+    across(4:23, as.numeric)) |> 
+  select(-c(7, 10, 13, 16))
+```
+
+## Load Game Information
+
+This includes game types (home, road, or neutral), locations, opponents and dates:
+
+```{r}
+dates_prep <- rev(sheets[-c(1, 2)]) |> 
+  map_df(
+    ~ read_excel(
+      path = path, 
+      sheet = .x, 
+      range = "A1:U1",
+      col_names = FALSE,
+      col_types = c(
+        "date", "text", "text", "text", "text", "text", "text", "text",
+        "text", "text", "text", "text", "text", "text", "text", "text",
+        "text", "text", "text", "text", "text")),
+    .id = "game")
+dates <- dates_prep |> 
+  mutate(
+    game = as.numeric(game),
+    date = as.Date(`...1`),
+    location = str_sub(`...9`, start = 3L, end = -1L),
+    opponent = `...21`,
+    .keep = "none") |> 
+  mutate(
+    type = case_when(
+      location == "Thomas" ~ "Home",
+      str_detect(location, "\\*") ~ "Tournament",
+      str_detect(location, "\\†") ~ "Tournament",
+      str_detect(location, "\\‡") ~ "Tournament",
+      str_detect(location, "\\⁰") ~ "Playoff",
+      .default = "Away") |> 
+      factor(levels = c("Home", "Away", "Tournament", "Playoff")) |> 
+      fct_drop(),
+    .after = date) |> 
+  mutate(
+    location = if_else(
+      type == "Tournament",
+      str_sub(location, start = 1L, end = -2L),
+      location))
+```
+
+# Summarize Data
+
+## Opponent Game Stats
+
+```{r}
+opp_scores_qtr_wide <- scores_qtr_wide |> 
+  filter(team != "Thomas") |> 
+  select(1, 3:6)
+
+opp_summary <- dates |> 
+  select(game, date, location, type) |> 
+  left_join(opponent_stats, by = "game") |> 
+  left_join(opp_scores_qtr_wide, by = "game") |> 
+  mutate(
+    team = opponent,
+    PTS = FTM + (2 * `2PM`) + (3 * `3PM`),
+    `2PT_PCT` = round(`2PM` / `2PA`, digits = 3),
+    `3PT_PCT` = round(`3PM` / `3PA`, digits = 3),
+    FT_PCT = round(FTM / FTA, digits = 3),
+    REB = OREB + DREB) |> 
+  select(-opponent) |> 
+  select(
+    game, date, location, type, team, 
+    PTS, OREB, DREB, REB, AST, STL, BLK, TO, PF,
+    `2PA`, `2PM`, `2PT_PCT`, `3PA`, `3PM`, `3PT_PCT`, FTA, FTM, FT_PCT,
+    q1, q2, q3, q4)
+```
+
+## Thomas Game Stats
+
+```{r}
+tt_scores_qtr_wide <- scores_qtr_wide |> 
+  filter(team == "Thomas") |> 
+  select(1, 3:6)
+
+tt_dates <- dates |> 
+  select(game, date, location, type)
+
+tt_summary <- player_stats |> 
+  select(-c(2:3, 17:19)) |> 
+  summarise(
+    across(PF:TO, sum),
+    .by = game) |> 
+  left_join(tt_scores_qtr_wide, by = "game") |> 
+  right_join(tt_dates, by = "game") |> 
+  mutate(
+    team = "Thomas",
+    PTS = FTM + (2 * `2PM`) + (3 * `3PM`),
+    `2PT_PCT` = round(`2PM` / `2PA`, digits = 3),
+    `3PT_PCT` = round(`3PM` / `3PA`, digits = 3),
+    FT_PCT = round(FTM / FTA, digits = 3),
+    REB = OREB + DREB) |> 
+  select(
+    game, date, location, type, team, 
+    PTS, OREB, DREB, REB, AST, STL, BLK, TO, PF,
+    `2PA`, `2PM`, `2PT_PCT`, `3PA`, `3PM`, `3PT_PCT`, FTA, FTM, FT_PCT,
+    q1, q2, q3, q4)
+```
+
+## Combined Game Stats
+
+```{r}
+game_summaries <- bind_rows(tt_summary, opp_summary)
+```
+
+## Player Stats
+
+```{r}
+# one row per player per game
+player_stats_detailed <- dates |> 
+  select(-location) |> 
+  left_join(player_stats, by = "game") |> 
+  select(-PTS) |> 
+  mutate(
+    PTS = FTM + (2 * `2PM`) + (3 * `3PM`),
+    `2PT_PCT` = round(`2PM` / `2PA`, digits = 3),
+    `3PT_PCT` = round(`3PM` / `3PA`, digits = 3),
+    FT_PCT = round(FTM / FTA, digits = 3),
+    REB = OREB + DREB) |> 
+  rename(`+/-` = `+ / -`) |> 
+  select(
+    game, date, type, opponent, num = number, name, 
+    PTS, OREB, DREB, REB, AST, STL, BLK, TO, PF, MIN, `+/-`,
+    `2PA`, `2PM`, `2PT_PCT`, `3PA`, `3PM`, `3PT_PCT`, FTA, FTM, FT_PCT)
+
+# one row per player - SUMS
+player_stats_sums <- player_stats_detailed |> 
+  summarise(
+    num = first(num),
+    G = n(),
+    across(
+      c(PTS:`2PM`, `3PA`, `3PM`, FTA, FTM),
+      sum),
+    .by = name) |> 
+  select(num, everything())
+
+# one row per player - MEANS
+player_stats_means <- player_stats_sums |> 
+  mutate(
+    across(
+      c(4:20),
+      ~ round(.x / G, digits = 1))) |> 
+  mutate(
+    `2PT_PCT` = round(`2PM` / `2PA`, digits = 3),
+    `3PT_PCT` = round(`3PM` / `3PA`, digits = 3),
+    FT_PCT = round(FTM / FTA, digits = 3),
+    TS_PCT = round(PTS / (2 * (`2PA` + `3PA` + (0.44 * FTA))), digits = 3),
+    `AST/TO` = round(AST / TO, digits = 2)
+  )
+```
+
+Let's calculate some more advanced player stats, but first we will need to calculate a few game-level team stats. Namely:
+
+-   $FGA$ - total field goals attempted (`2PA` + `3PA`) by Thomas (`TLT_FGA`) or opponent (`OPP_FGA`)
+-   $FGM$ - total field goals made (`2PM` + `3PM`) by Thomas (`TLT_FGM`) or opponent (`OPP_FGM`)
+-   $FTA$ - total free throws attempted by Thomas (`TLT_FTA`) or opponent (`OPP_FTA`)
+-   $3PA$ - total 3-pointers attempted by THomas (`TLT_3PA`) or opponent (`OPP_3PA`)
+-   $OREB$ - total offensive rebounds by Thomas (`TLT_OREB`) or their opponent (`OPP_OREB`)
+-   $REB$ - total rebounds for Thomas (`TLT_REB`) or their opponent (`OPP_REB`)
+-   $TO$ - total turnovers for Thomas (`TLT_TO`) or their opponent (`OPP_TO`)
+
+The `TLT` and `OPP` prefixes are acronyms for "Thomas Lady Terriers" and "opponent", respectively. In the formulas below, the `TLT` prefix is implied for any stats/metrics that don't have a prefix displayed. 
+
+**True Shooting Percentage** (`TS_PCT`) - this metric incorporates shooting efficiency for free throws, 2-point shots and 3-point shots:
+
+$$
+TS\_PCT=\frac{PTS}{2\big(FGA+(0.44 \times FTA)\big)}
+$$$
+**Estimated Possessions** (`POSS`) - this estimates the number of posessions a team has in a game based on shots taken, offensive rebounds and turnovers:
+
+$$
+POSS=0.5 \times \big(FGA+(0.475 \times FTA)-OREB+TO\big)
+$$
+
+It should be noted that `POSS` is a *team metric only*. This metric, while useful as a measure of pace, is also used to calculate some of the player metrics described below.
+
+**Rebounding Percentage** (`REB_PCT`) - measures a player's total rebounding contribution to the game, and is adjusted for time spent on the court:
+
+$$
+REB\_PCT=\frac{REB \times \frac{32}{MIN}}{TLT\_REB+OPP\_REB}
+$$
+If a player plays all 32 minutes of the game, this metric will provide the proportion of a player's rebounds to the total game rebounds of both teams. For the average rebounder, this metric should be close to 0.1 since there is a 1 of 10 players on the court will get a given rebound.
+
+**Assist Ratio** (`AST_RT`) - measures the percentage of teammate baskets a player assisted on, and is adjusted for time spent on the court:
+
+$$
+AST\_RT=\frac{AST}{\bigg(\frac{MIN}{32}\times TLT\_FGM\bigg)-FGM}
+$$
+
+**Assist Percentage** (`AST_PCT`) - measures the proportion of player assists per team possession, and is adjusted for time spent on the court:
+
+$$
+AST\_PCT=\frac{AST}{\frac{MIN}{32}\times TLT\_POSS}
+$$
+
+If a team plays at a fast pace, this metric adjusts for pace because it's based on total team possessions. This metric penalizes a player when teammates miss shots or turn the ball over.
+
+**Steal Percentage** (`STL_PCT`) - proportion of opponent's possessions in which a player gets a steal, and is adjusted for time spent on the court:
+
+$$
+STL\_PCT=\frac{STL}{\frac{MIN}{32}\times OPP\_POSS}
+$$
+
+**Block Percentage** (`BLK_PCT`) - proportion of opponent's possessions in which a player gets a block, and is adjusted for time spent on the court:
+
+$$
+BLK\_PCT=\frac{BLK}{\frac{MIN}{32}\times OPP\_POSS}
+$$
+
+**Turnover Percentage** (`TOV_PCT`) - measures the proportion of player turnovers per team possession, and is adjusted for time spent on the court:
+
+$$
+TOV\_PCT=\frac{TO}{\frac{MIN}{32}\times TLT\_POSS}
+$$
+
+**Player Efficiency** (`EFF`) - this is a (somewhat crude) measure of player efficiency, which is an adjusted difference of positive stats to negative stats:
+
+1.  positive stats: *points*, *rebounds*, *assists*, *steals* and *blocks*
+2.  negative stats: *missed field goals*, *missed free throws* and *turnovers*
+
+The sum of positive stats minus the sum of negative stats is then adjusted for time spent on the court:
+
+$$
+EFF=\frac{32}{MIN}\Big(PTS+REB+AST+STL+BLK-(FGA-FGM)-(FTA-FTM)-TO\Big)
+$$
+
+## Team Summaries
+
+We will start by obtaining the relevant team stats and adding those columns to the game-level player stats:
+
+```{r}
+team_summaries_TLT <- tt_summary |> 
+  mutate(
+    
+    # standard stats
+    TLT_FGA = `2PA` + `3PA`,
+    TLT_FGM = `2PM` + `3PM`,
+    TLT_FTA = FTA,
+    TLT_3PA = `3PA`,
+    TLT_OREB = OREB,
+    TLT_REB = REB,
+    TLT_TO = TO,
+    
+    # advanced stats
+    TS_PCT = round(PTS / (2 * (`2PA` + `3PA` + (0.44 * FTA))), digits = 3),
+    TLT_POSS = )
+```
+
+
+Let's start with detailed player stats:
+
+```{r}
+    TS_PCT = round(PTS / (2 * (`2PA` + `3PA` + (0.44 * FTA))), digits = 3),
+
+```
+
+
+First, we will define the following:
+
+$FGA=$ total team fiel
+
+Let's first define $POSS$ as the estimated number of possessions for the Thomas Lady Terriers (`TLT_poss`) or the opponent (`OPP_poss`)
+
+
+Possessions are calculated as:
+
+$$
+POSS=
+$$
+
+
+
+
+-    = estimated number of possessions for opponents
+
+
+```{r}
+# a
+  # select(1, 2, 13, 20:35)
+
+  # mutate(
+  #   PTS = FTM + (2 * `2PM`) + (3 * `3PM`),
+  #   `2PT_PCT` = round(`2PM` / `2PA`, digits = 3),
+  #   `3PT_PCT` = round(`3PM` / `3PA`, digits = 3),
+  #   FT_PCT = round(FTM / FTA, digits = 3),
+  #   TS_PCT = round(PTS / (2 * (`2PA` + `3PA` + (0.44 * FTA))), digits = 3),
+  #   REB = OREB + DREB,
+  #   `AST/TO` = round(AST / TO, digits = 2)) |> 
+  # select(
+  #   game, date, type, opponent, number, name, 
+  #   PTS, OREB, DREB, REB, AST, STL, BLK, TO, fouls,
+  #   `2PA`, `2PM`, `2PT_PCT`, `3PA`, `3PM`, `3PT_PCT`, FTA, FTM, FT_PCT, TS_PCT)
+
+# one row per player - MEANS
+player_stats_detailed <- dates |> 
+  select(-location) |> 
+  left_join(player_stats, by = "game") |> 
+  select(-PTS) |> 
+  mutate(
+    PTS = FTM + (2 * `2PM`) + (3 * `3PM`),
+    `2PT_PCT` = round(`2PM` / `2PA`, digits = 3),
+    `3PT_PCT` = round(`3PM` / `3PA`, digits = 3),
+    FT_PCT = round(FTM / FTA, digits = 3),
+    TS_PCT = round(PTS / (2 * (`2PA` + `3PA` + (0.44 * FTA))), digits = 3),
+    REB = OREB + DREB,
+    `AST/TO` = round(AST / TO, digits = 2)) |> 
+  select(
+    game, date, type, opponent, number, name, 
+    PTS, OREB, DREB, REB, AST, STL, BLK, TO, fouls,
+    `2PA`, `2PM`, `2PT_PCT`, `3PA`, `3PM`, `3PT_PCT`, FTA, FTM, FT_PCT, TS_PCT)
+```
+
+# Individual Player Stats
+
+## Jorgen
+
+```{r}
+
+```
+
+
+
+```{r}
+# specify the range of data to read
+ranges <- list(
+  "A4:V25", 
+  cell_rows(4:22))
+
+all_games <- map2_df(
+  games,
+  ranges,
+  ~ read_excel(path, sheet = .x, range = .y),
+  .ed = "sheet")
+
+
+  games |> 
+  set_names() |> 
+  map_dfr(
+    read_excel, 
+    path = path,
+    .id = )
+n_games <- length(games)
+
+
+
+
+excel_file <- read_xlsx(
+  here("Lady-Terriers_STATS_updated-13JAN2024.xlsx"),
+  range = "G1!A4:V13")
+
+g1 <- read_xlsx(
+  here("Lady-Terriers_STATS_updated-13JAN2024.xlsx"),
+  sheet = "G1",
+  skip = 3)
+
+```
+
+
+Game stats by team:
+
+```{r}
+
+```
+
+
+Scores by quarter:
+
+```{r}
+# setup
+scores_by_qtr <- games |> 
+  filter(is.na(FTA)) |> 
+  drop_na("Name") |> 
+  filter(Name != "SCORE BY QUARTER") |> 
+  mutate(
+    team = str_to_title(Name),
+    game = str_sub(game, start = 2, end = -1L) |> as.numeric()) |> 
+  select(
+    game, team, 
+    Q1_pts = "Fouls",
+    Q2_pts = "2PA",
+    Q3_pts = "2PM",
+    Q4_pts = "PCT...6") |> 
+  mutate(
+    team = if_else(team == "Bfdc", "Burns Flat-Dill City", team),
+    across(c(Q1_pts:Q4_pts), as.numeric))
+
+# one row per quarter per team
+scores_qtr_long <- scores_by_qtr |> 
+  pivot_longer(
+    cols = -c(1,2),
+    names_to = "qtr",
+    values_to = "points") |> 
+  mutate(quarter = str_sub(qtr, start = 2, end = 2) |> as.numeric()) |> 
+  select(1, 2, 5, 4)
+
+# one row per game per team
+scores_qtr_wide <- scores_by_qtr |> 
+  select(
+    game, team,
+    q1 = Q1_pts,
+    q2 = Q2_pts,
+    q3 = Q3_pts,
+    q4 = Q4_pts) |> 
+  mutate(
+    h1 = q1 + q2,
+    h2 = q3 + q4,
+    g = h1 + h2) |> 
+  set_variable_labels(
+    game = "Game Number",
+    team = "Team Name",
+    q1 = "1st Quarter Points",
+    q2 = "2nd Quarter Points",
+    q3 = "3rd Quarter Points",
+    q4 = "4th Quarter Points",
+    h1 = "1st Half Points",
+    h2 = "2nd Half Points",
+    g = "Total Points")
+
+qtr_wide_col_labs <- scores_qtr_wide
+names(qtr_wide_col_labs) <- as.character(var_label(qtr_wide_col_labs))
+tinytable::tt(qtr_wide_col_labs, theme = "striped")
+# scores_qtr_wide |> gt()
+```
+
+The first thing that we no

@@ -1,0 +1,15 @@
+{
+  "hash": "7ae032a2c11dc7eeb42f7bd7eb01d9b1",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\nauthor: Scott Stewart\ndate-modified: last-modified\n---\n\n\nThis is a Quarto website.\n\nHere is a `code font` and here is some math:\n\n$$\nREB\\_PCT=\\frac{REB \\times \\frac{32}{MIN}}{TLT\\_REB+OPP\\_REB}\n$$\nTo learn more about Quarto websites visit <https://quarto.org/docs/websites>.\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1 + 1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 2\n```\n\n\n:::\n\n```{.r .cell-code}\nlibrary(ggplot2)\n\ny <- (3 / 5) |> \n  round(digits = 3)\n```\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

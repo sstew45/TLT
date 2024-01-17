@@ -1,0 +1,24 @@
+---
+author: Scott Stewart
+date-modified: last-modified
+---
+
+# Games
+
+Here is a `code font` and here is some math:
+
+$$
+\mathrm{REB\_PCT}=\frac{\mathrm{REB} \times \frac{32}{\mathrm{MIN}}}{\mathrm{TLT\_REB}+\mathrm{OPP\_REB}}
+$$
+To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+
+```{r}
+1 + 1
+
+library(ggplot2)
+
+y <- (3 / 5) |> 
+  round(digits = 3)
+```
+
+

@@ -1,11 +1,22 @@
 ---
-title: "TLT"
+author: Scott Stewart
+date-modified: last-modified
 ---
 
 This is a Quarto website.
 
+Here is a `code font` and here is some math:
+
+$$
+REB\_PCT=\frac{REB \times \frac{32}{MIN}}{TLT\_REB+OPP\_REB}
+$$
 To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
 
 ```{r}
 1 + 1
+
+library(ggplot2)
+
+y <- (3 / 5) |> 
+  round(digits = 3)
 ```

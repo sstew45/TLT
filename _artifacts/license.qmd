@@ -1,0 +1,12 @@
+---
+title: "License"
+title-block-banner: false
+---
+
+© Copyright Scott Stewart
+
+This is my personal website. No content herein is endorsed by any organization of which I am a part. Any views or opinions expressed on this website are my own.
+
+Content on this site is provided under a [Creative Commons (CC-BY) 4.0 license](https://creativecommons.org/licenses/by/4.0/legalcode). You may re-use this content as long as you indicate my authorship and provide a link back to the original material.
+
+Source code from this site may be re-used without restriction.

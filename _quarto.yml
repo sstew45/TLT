@@ -3,18 +3,74 @@ project:
   output-dir: docs
 
 website:
-  title: "TLT"
+  title: "2023-24 Thomas Lady Terriers Stats"
+  site-url: "https://sstew45.github.io/TLT/"
   navbar:
+    title: "Thomas Lady Terriers Basketball"
+    background: "#00740EFF"
+    foreground: "#FFFFFF"
+    pinned: true
     left:
-      - href: index.qmd
+      - text: "2023-24 player and team stats"
+    right:
+      - href: "index.qmd"
         text: Home
-      - about.qmd
+      - href: "01_setup.qmd"
+        text: Setup
+      - href: "02_games.qmd"
+        text: Games
+      - href: "03_players.qmd"
+        text: Players
+      - href: "04_teams.qmd"
+        text: Teams
+      - href: "05_advanced.qmd"
+        text: Advanced
+  page-footer:
+    left:
+      - href: https://www.quarto.org
+        text: Built with Quarto
+    right:
+      - text: GitHub
+        href: https://github.com/sstew45
+      - text: email
+        href: mailto:sstew_ods@protonmail.com
+
+        
 
 format:
   html:
-    theme: cosmo
-    css: styles.css
+    theme: 
+      - materia
+      - TLT.scss
+    highlight-style: github
+    embed-resources: true
+    html-math-method: katex
+    code-fold: true
+    code-copy: hover
+    code-summary: CODE
+    code-tools: 
+      source: true
+    code-link: true
     toc: true
+    toc-location: left
+    toc-title: Contents
+    toc-depth: 4
+    number-sections: true
+    number-depth: 4
+    fig-width: 8
+    fig-asp: 0.618
+    fig-align: center
+    out-width: "80%"
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    
+execute:
+  freeze: false
+  cache: false
+  echo: true
+  warning: false
+  message: false
+  
+link-citations: true
 
-
-
+editor: source
